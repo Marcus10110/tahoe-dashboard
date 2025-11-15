@@ -147,7 +147,15 @@ async function fetchVailResortData(resortId: keyof typeof RESORTS): Promise<Reso
   }
 
   const timestamp = Date.now();
-  const response = await fetch(`${resort.apiUrl}?_=${timestamp}`);
+  const response = await fetch(`${resort.apiUrl}?_=${timestamp}`, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'application/json, text/plain, */*',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Referer': resort.apiUrl.split('/api/')[0],
+      'Origin': resort.apiUrl.split('/api/')[0],
+    }
+  });
 
   // Check if response is OK and is JSON
   if (!response.ok) {
