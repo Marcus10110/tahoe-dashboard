@@ -1,0 +1,293 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1e3c72 100%);
+  color: #ffffff;
+  min-height: 100vh;
+  padding-bottom: 2rem;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Header */
+header {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  padding: 1rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.last-updated {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+/* Go Meter */
+.go-meter {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem 0;
+  text-align: center;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.meter-display {
+  font-size: 3rem;
+  margin: 1rem 0;
+}
+
+.meter-text {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.meter-description {
+  margin-top: 0.5rem;
+  opacity: 0.9;
+}
+
+/* Section Headers */
+.section-header {
+  font-size: 1.75rem;
+  margin: 2rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Resort Cards Grid */
+.resort-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 1200px) {
+  .resort-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.resort-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.resort-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.resort-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.resort-link {
+  color: #64b5f6;
+  text-decoration: none;
+  font-size: 0.875rem;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+.resort-link:hover {
+  text-decoration: underline;
+}
+
+.conditions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.condition-item {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.condition-label {
+  font-size: 0.875rem;
+  opacity: 0.8;
+  margin-bottom: 0.5rem;
+}
+
+.condition-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.forecast-section {
+  margin-top: 1.5rem;
+}
+
+.forecast-section h4 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.9;
+}
+
+.forecast-grid-small {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+}
+
+.forecast-item-small {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  opacity: 0.7;
+}
+
+.error {
+  text-align: center;
+  padding: 2rem;
+  color: #ff6b6b;
+}
+
+/* Travel Section */
+.travel-section {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.travel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.travel-item {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.travel-item h4 {
+  margin-bottom: 0.5rem;
+  color: #64b5f6;
+}
+
+.travel-item a {
+  color: #90caf9;
+  text-decoration: none;
+  display: block;
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+}
+
+.travel-item a:hover {
+  text-decoration: underline;
+}
+
+.map-embed {
+  margin: 1.5rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 400px;
+}
+
+.map-embed iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Weather Summary */
+.weather-summary {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.forecast-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.forecast-item {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.forecast-name {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.forecast-temp {
+  font-size: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.forecast-desc {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .meter-display {
+    font-size: 2rem;
+  }
+
+  .meter-text {
+    font-size: 1.25rem;
+  }
+}

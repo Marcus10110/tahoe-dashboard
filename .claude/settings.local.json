@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:v4.mtnfeed.com)",
+      "WebFetch(domain:www.skiheavenly.com)",
+      "WebFetch(domain:www.kirkwood.com)",
+      "WebFetch(domain:www.northstarcalifornia.com)",
+      "Bash(curl:*)",
+      "WebFetch(domain:mtnpowder.com)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
