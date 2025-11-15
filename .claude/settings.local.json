@@ -6,7 +6,8 @@
       "WebFetch(domain:www.kirkwood.com)",
       "WebFetch(domain:www.northstarcalifornia.com)",
       "Bash(curl:*)",
-      "WebFetch(domain:mtnpowder.com)"
+      "WebFetch(domain:mtnpowder.com)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

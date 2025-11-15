@@ -8,7 +8,7 @@ const cache = new NodeCache({ stdTTL: 600 }); // 10 minute cache
 const TAHOE_LAT = 39.1911;
 const TAHOE_LON = -120.2359;
 
-router.get('/', async (req, res) => {
+router.get('/', async (_req, res) => {
   const cached = cache.get('generalForecast');
   if (cached) {
     return res.json(cached);
@@ -19,12 +19,12 @@ router.get('/', async (req, res) => {
       `https://api.weather.gov/points/${TAHOE_LAT},${TAHOE_LON}`,
       { headers: { 'User-Agent': 'TahoeMeter/1.0' } }
     );
-    const pointData = await pointResponse.json();
+    const pointData = await pointResponse.json() as any;
 
     const forecastResponse = await fetch(pointData.properties.forecast, {
       headers: { 'User-Agent': 'TahoeMeter/1.0' },
     });
-    const forecastData = await forecastResponse.json();
+    const forecastData = await forecastResponse.json() as any;
 
     // Weather.gov typically provides 14 periods (7 days), but we need more for next weekend
     // Take up to 20 periods to cover ~10 days

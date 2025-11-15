@@ -5,7 +5,7 @@ const router = express.Router();
 
 // For MVP, we'll return static route info
 // In the future, this could scrape Caltrans QuickMap or use their APIs
-router.get('/', async (req, res) => {
+router.get('/', async (_req, res) => {
   const travelData: TravelConditions = {
     routes: [
       {

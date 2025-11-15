@@ -39,12 +39,12 @@ async function getWeatherGovForecast(lat: number, lon: number): Promise<Forecast
       `https://api.weather.gov/points/${lat},${lon}`,
       { headers: { 'User-Agent': 'TahoeMeter/1.0' } }
     );
-    const pointData = await pointResponse.json();
+    const pointData = await pointResponse.json() as any;
 
     const forecastResponse = await fetch(pointData.properties.forecast, {
       headers: { 'User-Agent': 'TahoeMeter/1.0' },
     });
-    const forecastData = await forecastResponse.json();
+    const forecastData = await forecastResponse.json() as any;
 
     return forecastData.properties.periods.map((period: any) => ({
       date: period.startTime,
@@ -64,7 +64,7 @@ async function getWeatherGovForecast(lat: number, lon: number): Promise<Forecast
 async function fetchPalisadesData(): Promise<ResortConditions> {
   // First, fetch config to get bearer token and resort IDs
   const configResponse = await fetch(RESORTS.palisades.configUrl);
-  const config = await configResponse.json();
+  const config = await configResponse.json() as any;
 
   const bearerToken = config.bearerToken;
   const resortIds = config.resortIds || [61]; // fallback to 61 if not found
@@ -74,7 +74,7 @@ async function fetchPalisadesData(): Promise<ResortConditions> {
   const dataUrl = `https://mtnpowder.com/feed/v3.json?bearer_token=${bearerToken}&${resortIdParams}`;
 
   const response = await fetch(dataUrl);
-  const data = await response.json();
+  const data = await response.json() as any;
 
   // Extract resort data (should be first item in Resorts array)
   const resort = data.Resorts?.[0];
@@ -123,9 +123,15 @@ async function fetchPalisadesData(): Promise<ResortConditions> {
 // Parse Vail Resorts data (Heavenly, Kirkwood, Northstar)
 async function fetchVailResortData(resortId: keyof typeof RESORTS): Promise<ResortConditions> {
   const resort = RESORTS[resortId];
+
+  // Type guard to ensure resort has apiUrl
+  if (!('apiUrl' in resort)) {
+    throw new Error(`Resort ${resortId} does not have an apiUrl`);
+  }
+
   const timestamp = Date.now();
   const response = await fetch(`${resort.apiUrl}?_=${timestamp}`);
-  const data = await response.json();
+  const data = await response.json() as any;
 
   const forecasts = await getWeatherGovForecast(resort.lat, resort.lon);
 
@@ -178,7 +184,6 @@ function getWeekendForecasts(forecasts: Forecast[], nextWeekend: boolean): Forec
 
   return forecasts.filter((f) => {
     const forecastDate = new Date(f.date);
-    const dayOfWeek = forecastDate.getDay();
     const diffDays = Math.floor(
       (forecastDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
     );
@@ -223,7 +228,7 @@ router.get('/:resortId', async (req, res) => {
 });
 
 // GET /api/resorts - Get all resorts
-router.get('/', async (req, res) => {
+router.get('/', async (_req, res) => {
   try {
     const resortIds = Object.keys(RESORTS) as (keyof typeof RESORTS)[];
     const allData = await Promise.all(
