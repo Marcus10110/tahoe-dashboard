@@ -75,7 +75,23 @@ function App() {
       <header>
         <div className="container">
           <div className="header-content">
-            <h1>Tahoe-Meter ❄️</h1>
+            <h1>
+              Tahoe-Meter ❄️
+              <a
+                href="https://github.com/Marcus10110/tahoe-dashboard"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  marginLeft: '1rem',
+                  fontSize: '0.875rem',
+                  color: '#64b5f6',
+                  textDecoration: 'none',
+                  fontWeight: 'normal'
+                }}
+              >
+                GitHub →
+              </a>
+            </h1>
             <div className="last-updated">
               Updated: {lastUpdated.toLocaleString()}
             </div>
