@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 
 interface Period {
-  name: string
-  temperature: number
-  temperatureUnit: string
-  windSpeed: string
-  shortForecast: string
-  probabilityOfPrecipitation: number
-  startTime: string
+  name: string;
+  temperature: number;
+  temperatureUnit: string;
+  windSpeed: string;
+  shortForecast: string;
+  probabilityOfPrecipitation: number;
+  startTime: string;
 }
 
 interface OrganizedForecast {
-  todayTomorrow: Period[]
-  thisWeekend: Period[]
-  nextWeekend: Period[]
+  todayTomorrow: Period[];
+  thisWeekend: Period[];
+  nextWeekend: Period[];
 }
 
 export default function WeatherSummary() {
@@ -21,118 +21,131 @@ export default function WeatherSummary() {
     todayTomorrow: [],
     thisWeekend: [],
     nextWeekend: [],
-  })
-  const [loading, setLoading] = useState(true)
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch('/api/weather')
       .then((res) => res.json())
       .then((data) => {
-        const periods: Period[] = data.periods || []
-        const organized = organizeForecast(periods)
-        setForecast(organized)
-        setLoading(false)
+        const periods: Period[] = data.periods || [];
+        const organized = organizeForecast(periods);
+        setForecast(organized);
+        setLoading(false);
       })
       .catch((err) => {
-        console.error('Error fetching weather:', err)
-        setLoading(false)
-      })
-  }, [])
+        console.error('Error fetching weather:', err);
+        setLoading(false);
+      });
+  }, []);
 
   const organizeForecast = (periods: Period[]): OrganizedForecast => {
-    const now = new Date()
-    const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const now = new Date();
+    const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     const result: OrganizedForecast = {
       todayTomorrow: [],
       thisWeekend: [],
       nextWeekend: [],
-    }
+    };
 
     // Helper to get date without time
-    const getDateOnly = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    const getDateOnly = (date: Date) =>
+      new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
     // Calculate this Friday and next Friday
-    const currentDayOfWeek = now.getDay() // 0 = Sunday, 6 = Saturday
+    const currentDayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
 
     // Days until Friday (5 = Friday)
-    let daysUntilFriday = (5 - currentDayOfWeek + 7) % 7
+    let daysUntilFriday = (5 - currentDayOfWeek + 7) % 7;
     if (currentDayOfWeek === 5) {
       // It's Friday - use this Friday (people want to see this weekend even Friday evening)
-      daysUntilFriday = 0
+      daysUntilFriday = 0;
     }
 
-    const thisFriday = new Date(nowDateOnly)
-    thisFriday.setDate(thisFriday.getDate() + daysUntilFriday)
+    const thisFriday = new Date(nowDateOnly);
+    thisFriday.setDate(thisFriday.getDate() + daysUntilFriday);
 
-    const thisSunday = new Date(thisFriday)
-    thisSunday.setDate(thisSunday.getDate() + 2) // Sunday
+    const thisSunday = new Date(thisFriday);
+    thisSunday.setDate(thisSunday.getDate() + 2); // Sunday
 
-    const nextFriday = new Date(thisFriday)
-    nextFriday.setDate(nextFriday.getDate() + 7)
+    const nextFriday = new Date(thisFriday);
+    nextFriday.setDate(nextFriday.getDate() + 7);
 
-    const nextSunday = new Date(nextFriday)
-    nextSunday.setDate(nextSunday.getDate() + 2)
+    const nextSunday = new Date(nextFriday);
+    nextSunday.setDate(nextSunday.getDate() + 2);
 
-    const tomorrow = new Date(nowDateOnly)
-    tomorrow.setDate(tomorrow.getDate() + 1)
+    const tomorrow = new Date(nowDateOnly);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
     periods.forEach((period) => {
-      const periodDate = new Date(period.startTime)
-      const periodDateOnly = getDateOnly(periodDate)
+      const periodDate = new Date(period.startTime);
+      const periodDateOnly = getDateOnly(periodDate);
 
       // Today & Tomorrow - show periods from today and tomorrow only
-      if (periodDateOnly.getTime() === nowDateOnly.getTime() ||
-          periodDateOnly.getTime() === tomorrow.getTime()) {
-        result.todayTomorrow.push(period)
+      if (
+        periodDateOnly.getTime() === nowDateOnly.getTime() ||
+        periodDateOnly.getTime() === tomorrow.getTime()
+      ) {
+        result.todayTomorrow.push(period);
       }
 
       // This Weekend - Friday night through Sunday night
       // Weekend starts on Friday evening, so include periods from Friday onwards
-      const isInWeekendRange = periodDateOnly.getTime() >= thisFriday.getTime() &&
-          periodDateOnly.getTime() <= thisSunday.getTime()
+      const isInWeekendRange =
+        periodDateOnly.getTime() >= thisFriday.getTime() &&
+        periodDateOnly.getTime() <= thisSunday.getTime();
 
       if (isInWeekendRange) {
         // Also check if it's a Friday period that it's evening/night
-        const periodName = period.name.toLowerCase()
-        const isFriday = periodDateOnly.getTime() === thisFriday.getTime()
+        const periodName = period.name.toLowerCase();
+        const isFriday = periodDateOnly.getTime() === thisFriday.getTime();
 
         if (isFriday) {
           // Only include if it's afternoon/evening/night on Friday
-          const isFridayEvening = periodName.includes('night') || periodName.includes('evening') || periodName.includes('afternoon')
+          const isFridayEvening =
+            periodName.includes('night') ||
+            periodName.includes('evening') ||
+            periodName.includes('afternoon');
           if (isFridayEvening) {
-            result.thisWeekend.push(period)
+            result.thisWeekend.push(period);
           }
         } else {
-          result.thisWeekend.push(period)
+          result.thisWeekend.push(period);
         }
       }
 
       // Next Weekend - Friday night through Sunday night of following week
-      if (periodDateOnly.getTime() >= nextFriday.getTime() &&
-          periodDateOnly.getTime() <= nextSunday.getTime()) {
-        const periodName = period.name.toLowerCase()
+      if (
+        periodDateOnly.getTime() >= nextFriday.getTime() &&
+        periodDateOnly.getTime() <= nextSunday.getTime()
+      ) {
+        const periodName = period.name.toLowerCase();
         if (periodDateOnly.getTime() === nextFriday.getTime()) {
           // Only include if it's afternoon/evening/night on Friday
-          if (periodName.includes('night') || periodName.includes('evening') || periodName.includes('afternoon')) {
-            result.nextWeekend.push(period)
+          if (
+            periodName.includes('night') ||
+            periodName.includes('evening') ||
+            periodName.includes('afternoon')
+          ) {
+            result.nextWeekend.push(period);
           }
         } else {
-          result.nextWeekend.push(period)
+          result.nextWeekend.push(period);
         }
       }
-    })
+    });
 
-    return result
-  }
+    return result;
+  };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const month = date.getMonth() + 1
-    const day = date.getDate()
-    const weekday = date.toLocaleDateString('en-US', { weekday: 'short' })
-    return `${weekday} ${month}/${day}`
-  }
+    const date = new Date(dateString);
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+    return `${weekday} ${month}/${day}`;
+  };
 
   const renderPeriods = (periods: Period[]) => {
     return periods.map((period, index) => (
@@ -151,8 +164,8 @@ export default function WeatherSummary() {
           </div>
         )}
       </div>
-    ))
-  }
+    ));
+  };
 
   return (
     <>
@@ -167,7 +180,7 @@ export default function WeatherSummary() {
             fontSize: '0.875rem',
             color: '#64b5f6',
             textDecoration: 'none',
-            fontWeight: 'normal'
+            fontWeight: 'normal',
           }}
         >
           View on Weather.gov →
@@ -180,13 +193,17 @@ export default function WeatherSummary() {
           <>
             {forecast.todayTomorrow.length > 0 && (
               <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', opacity: 0.9 }}>Today & Tomorrow</h3>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', opacity: 0.9 }}>
+                  Today & Tomorrow
+                </h3>
                 <div className="forecast-grid">{renderPeriods(forecast.todayTomorrow)}</div>
               </div>
             )}
 
             <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', opacity: 0.9 }}>This Weekend</h3>
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', opacity: 0.9 }}>
+                This Weekend
+              </h3>
               {forecast.thisWeekend.length > 0 ? (
                 <div className="forecast-grid">{renderPeriods(forecast.thisWeekend)}</div>
               ) : (
@@ -198,7 +215,9 @@ export default function WeatherSummary() {
 
             {forecast.nextWeekend.length > 0 && (
               <div>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', opacity: 0.9 }}>Next Weekend</h3>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', opacity: 0.9 }}>
+                  Next Weekend
+                </h3>
                 <div className="forecast-grid">{renderPeriods(forecast.nextWeekend)}</div>
               </div>
             )}
@@ -206,5 +225,5 @@ export default function WeatherSummary() {
         )}
       </div>
     </>
-  )
+  );
 }

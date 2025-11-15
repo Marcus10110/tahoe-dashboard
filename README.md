@@ -37,6 +37,7 @@ npm run dev
 ```
 
 This will start:
+
 - Frontend dev server at `http://localhost:3000`
 - Backend API server at `http://localhost:3001`
 
@@ -53,6 +54,7 @@ npm start
 ```
 
 This will:
+
 1. Build the React app to `dist/client`
 2. Compile TypeScript backend to `dist/server`
 3. Start the Express server which serves both the API and static files
@@ -75,12 +77,14 @@ The app will be available at your Render URL.
 ### Other Platforms
 
 The app is a standard Node.js Express app and can be deployed to:
+
 - Railway.app
 - Fly.io
 - Heroku
 - Any platform that supports Node.js
 
 Just ensure:
+
 - `NODE_ENV=production` is set
 - Build command runs `npm install && npm run build`
 - Start command runs `npm start`
@@ -88,15 +92,19 @@ Just ensure:
 ## API Endpoints
 
 ### `GET /api/resorts`
+
 Returns all resort conditions and forecasts.
 
 ### `GET /api/resorts/:resortId`
+
 Returns conditions for a specific resort (palisades, northstar, heavenly, kirkwood).
 
 ### `GET /api/weather`
+
 Returns 7-day general Tahoe area forecast from weather.gov.
 
 ### `GET /api/travel`
+
 Returns travel route information.
 
 ## Project Structure

@@ -15,16 +15,15 @@ router.get('/', async (_req, res) => {
   }
 
   try {
-    const pointResponse = await fetch(
-      `https://api.weather.gov/points/${TAHOE_LAT},${TAHOE_LON}`,
-      { headers: { 'User-Agent': 'TahoeMeter/1.0' } }
-    );
-    const pointData = await pointResponse.json() as any;
+    const pointResponse = await fetch(`https://api.weather.gov/points/${TAHOE_LAT},${TAHOE_LON}`, {
+      headers: { 'User-Agent': 'TahoeMeter/1.0' },
+    });
+    const pointData = (await pointResponse.json()) as any;
 
     const forecastResponse = await fetch(pointData.properties.forecast, {
       headers: { 'User-Agent': 'TahoeMeter/1.0' },
     });
-    const forecastData = await forecastResponse.json() as any;
+    const forecastData = (await forecastResponse.json()) as any;
 
     // Weather.gov typically provides 14 periods (7 days), but we need more for next weekend
     // Take up to 20 periods to cover ~10 days

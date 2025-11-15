@@ -20,16 +20,13 @@ Each major Tahoe resort gets its own “card” with current and short-term fore
 
 - **Resorts covered**: Palisades/Alpine, Northstar, Heavenly, Kirkwood
 - For each:
-
   - Resort name + logo
   - Link to official resort conditions page (e.g. palisadestahoe.com/mountain-conditions)
   - **Iframe or embed of weather.gov forecast** (no key required):
-
     - Example: `https://forecast.weather.gov/MapClick.php?lat=39.1911&lon=-120.2359&unit=0&lg=english&FcstType=text&TextType=2`
     - or the JSON endpoint: `https://api.weather.gov/points/{lat},{lon}` → fetch forecast
 
   - **Snowfall summary**:
-
     - 24-hr snowfall (if shown in resort’s conditions iframe)
     - 7-day snowfall forecast (from weather.gov)
 
@@ -45,7 +42,6 @@ _(Optional early enhancement: color-code or iconize conditions — 🟢 good sno
 ### 1. **Driving Time Estimates**
 
 - Use public Google Maps “embed” URLs (no API key required):
-
   - Example:
 
     ```html
@@ -62,20 +58,14 @@ _(API key required for dynamic distance/time via JS, so MVP can just link out or
 ### 2. **Caltrans Road Conditions**
 
 - Directly embed or link to live chain control / closure maps:
-
   - [Caltrans QuickMap](https://quickmap.dot.ca.gov/)
   - Embed example:
 
     ```html
-    <iframe
-      src="https://quickmap.dot.ca.gov"
-      width="100%"
-      height="400"
-    ></iframe>
+    <iframe src="https://quickmap.dot.ca.gov" width="100%" height="400"></iframe>
     ```
 
   - Also include text links to road status pages for:
-
     - **I-80** (SF → Northstar / Palisades)
     - **US-50** (SF → Heavenly)
     - **CA-88** (SF → Kirkwood)
@@ -83,7 +73,6 @@ _(API key required for dynamic distance/time via JS, so MVP can just link out or
 ### 3. **Snow Chain / Closure Summary (text)**
 
 - Include a section with prefilled Caltrans URLs:
-
   - I-80 chain control summary
   - US-50 chain control summary
   - CA-88 chain control summary
@@ -95,7 +84,6 @@ _(API key required for dynamic distance/time via JS, so MVP can just link out or
 
 - Small section with a **7-day forecast summary** (from weather.gov)
 - Use weather.gov API directly (JSON — no API key):
-
   - Example fetch:
 
     ```js
@@ -105,7 +93,6 @@ _(API key required for dynamic distance/time via JS, so MVP can just link out or
     ```
 
 - Display:
-
   - “Today / Tonight / Tomorrow / Weekend”
   - Temperature highs/lows and forecast icons
   - Precipitation chance (%)
@@ -117,7 +104,6 @@ _(API key required for dynamic distance/time via JS, so MVP can just link out or
 A single, big visual element at the top summarizing the weekend conditions.
 
 - Combines rough logic like:
-
   - Recent snowfall + upcoming snowfall + travel open roads
   - Use emojis or a dial meter (SVG) for fun:
     🟢 “Powder Alert” → recent snow + low traffic

@@ -1,74 +1,74 @@
-import { useEffect, useState } from 'react'
-import ResortCard from './components/ResortCard'
-import GoMeter from './components/GoMeter'
-import TravelConditions from './components/TravelConditions'
-import WeatherSummary from './components/WeatherSummary'
+import { useEffect, useState } from 'react';
+import ResortCard from './components/ResortCard';
+import GoMeter from './components/GoMeter';
+import TravelConditions from './components/TravelConditions';
+import WeatherSummary from './components/WeatherSummary';
 
 interface ResortData {
-  name: string
-  id: string
+  name: string;
+  id: string;
   conditions: {
     snowDepth: {
-      base: number
-      summit: number
-      newSnow24h: number
-      newSnow48h?: number
-      newSnow7day?: number
-      seasonTotal?: number
-    }
+      base: number;
+      summit: number;
+      newSnow24h: number;
+      newSnow48h?: number;
+      newSnow7day?: number;
+      seasonTotal?: number;
+    };
     weather: {
-      current: string
-      temp: number
-      high: number
-      low: number
-      wind?: string
-    }
+      current: string;
+      temp: number;
+      high: number;
+      low: number;
+      wind?: string;
+    };
     lifts: {
-      open: number
-      total: number
-    }
+      open: number;
+      total: number;
+    };
     trails?: {
-      open: number
-      total: number
-    }
-  }
+      open: number;
+      total: number;
+    };
+  };
   forecasts: {
-    today: any
-    thisWeekend: any[]
-    nextWeekend: any[]
-  }
-  lastUpdated: string
+    today: any;
+    thisWeekend: any[];
+    nextWeekend: any[];
+  };
+  lastUpdated: string;
 }
 
 function App() {
-  const [resorts, setResorts] = useState<ResortData[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+  const [resorts, setResorts] = useState<ResortData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   const fetchData = async () => {
     try {
-      setLoading(true)
-      const response = await fetch('/api/resorts')
-      if (!response.ok) throw new Error('Failed to fetch resort data')
-      const data = await response.json()
-      setResorts(data)
-      setLastUpdated(new Date())
-      setError(null)
+      setLoading(true);
+      const response = await fetch('/api/resorts');
+      if (!response.ok) throw new Error('Failed to fetch resort data');
+      const data = await response.json();
+      setResorts(data);
+      setLastUpdated(new Date());
+      setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchData()
+    fetchData();
 
     // Auto-refresh every 10 minutes
-    const interval = setInterval(fetchData, 10 * 60 * 1000)
-    return () => clearInterval(interval)
-  }, [])
+    const interval = setInterval(fetchData, 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
@@ -86,15 +86,13 @@ function App() {
                   fontSize: '0.875rem',
                   color: '#64b5f6',
                   textDecoration: 'none',
-                  fontWeight: 'normal'
+                  fontWeight: 'normal',
                 }}
               >
                 GitHub →
               </a>
             </h1>
-            <div className="last-updated">
-              Updated: {lastUpdated.toLocaleString()}
-            </div>
+            <div className="last-updated">Updated: {lastUpdated.toLocaleString()}</div>
           </div>
         </div>
       </header>
@@ -117,7 +115,7 @@ function App() {
         <WeatherSummary />
       </div>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
