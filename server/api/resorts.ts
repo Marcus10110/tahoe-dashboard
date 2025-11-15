@@ -62,19 +62,32 @@ async function getWeatherGovForecast(lat: number, lon: number): Promise<Forecast
 
 // Parse Palisades data (mtnpowder format)
 async function fetchPalisadesData(): Promise<ResortConditions> {
-  // First, fetch config to get bearer token and resort IDs
-  const configResponse = await fetch(RESORTS.palisades.configUrl);
-  const config = await configResponse.json() as any;
+  try {
+    // First, fetch config to get bearer token and resort IDs
+    const configResponse = await fetch(RESORTS.palisades.configUrl);
+    if (!configResponse.ok) {
+      const text = await configResponse.text();
+      console.error(`[palisades] Config API returned status ${configResponse.status}`);
+      console.error(`[palisades] Response body (first 500 chars):`, text.substring(0, 500));
+      throw new Error(`Failed to fetch Palisades config`);
+    }
+    const config = await configResponse.json() as any;
 
-  const bearerToken = config.bearerToken;
-  const resortIds = config.resortIds || [61]; // fallback to 61 if not found
+    const bearerToken = config.bearerToken;
+    const resortIds = config.resortIds || [61]; // fallback to 61 if not found
 
-  // Now fetch actual data using the bearer token and resort IDs
-  const resortIdParams = resortIds.map((id: number) => `resortId%5B%5D=${id}`).join('&');
-  const dataUrl = `https://mtnpowder.com/feed/v3.json?bearer_token=${bearerToken}&${resortIdParams}`;
+    // Now fetch actual data using the bearer token and resort IDs
+    const resortIdParams = resortIds.map((id: number) => `resortId%5B%5D=${id}`).join('&');
+    const dataUrl = `https://mtnpowder.com/feed/v3.json?bearer_token=${bearerToken}&${resortIdParams}`;
 
-  const response = await fetch(dataUrl);
-  const data = await response.json() as any;
+    const response = await fetch(dataUrl);
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(`[palisades] Data API returned status ${response.status}`);
+      console.error(`[palisades] Response body (first 500 chars):`, text.substring(0, 500));
+      throw new Error(`Failed to fetch Palisades data`);
+    }
+    const data = await response.json() as any;
 
   // Extract resort data (should be first item in Resorts array)
   const resort = data.Resorts?.[0];
@@ -118,6 +131,10 @@ async function fetchPalisadesData(): Promise<ResortConditions> {
     },
     lastUpdated: new Date().toISOString(),
   };
+  } catch (error) {
+    console.error('[palisades] Error fetching data:', error);
+    throw error;
+  }
 }
 
 // Parse Vail Resorts data (Heavenly, Kirkwood, Northstar)
@@ -131,6 +148,23 @@ async function fetchVailResortData(resortId: keyof typeof RESORTS): Promise<Reso
 
   const timestamp = Date.now();
   const response = await fetch(`${resort.apiUrl}?_=${timestamp}`);
+
+  // Check if response is OK and is JSON
+  if (!response.ok) {
+    const text = await response.text();
+    console.error(`[${resortId}] API returned status ${response.status}`);
+    console.error(`[${resortId}] Response body (first 500 chars):`, text.substring(0, 500));
+    throw new Error(`Resort API returned status ${response.status} for ${resortId}`);
+  }
+
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    const text = await response.text();
+    console.error(`[${resortId}] Expected JSON but got content-type: ${contentType}`);
+    console.error(`[${resortId}] Response body (first 500 chars):`, text.substring(0, 500));
+    throw new Error(`Resort API returned non-JSON response for ${resortId}`);
+  }
+
   const data = await response.json() as any;
 
   const forecasts = await getWeatherGovForecast(resort.lat, resort.lon);
@@ -231,17 +265,34 @@ router.get('/:resortId', async (req, res) => {
 router.get('/', async (_req, res) => {
   try {
     const resortIds = Object.keys(RESORTS) as (keyof typeof RESORTS)[];
-    const allData = await Promise.all(
+    const results = await Promise.allSettled(
       resortIds.map(async (id) => {
         const cached = cache.get<ResortConditions>(id);
         if (cached) return cached;
 
-        const data =
-          id === 'palisades' ? await fetchPalisadesData() : await fetchVailResortData(id);
-        cache.set(id, data);
-        return data;
+        try {
+          const data =
+            id === 'palisades' ? await fetchPalisadesData() : await fetchVailResortData(id);
+          cache.set(id, data);
+          return data;
+        } catch (error) {
+          console.error(`Failed to fetch ${id}:`, error);
+          throw error;
+        }
       })
     );
+
+    // Filter out failed resorts and return successful ones
+    const allData = results
+      .filter((result): result is PromiseFulfilledResult<ResortConditions> =>
+        result.status === 'fulfilled'
+      )
+      .map(result => result.value);
+
+    // If all resorts failed, return an error
+    if (allData.length === 0) {
+      return res.status(500).json({ error: 'Failed to fetch any resort data' });
+    }
 
     res.json(allData);
   } catch (error) {
