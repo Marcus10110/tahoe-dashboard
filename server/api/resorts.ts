@@ -87,14 +87,12 @@ async function fetchPalisadesData(): Promise<ResortConditions> {
       throw new Error(`Failed to fetch Palisades data`);
     }
     const data = (await response.json()) as any;
-    console.log('data', data);
+
     // Extract resort data (should be first item in Resorts array)
     const resort = data.Resorts?.[0];
     const snowReport = resort?.SnowReport;
     const currentConditions = resort?.CurrentConditions;
     const currentBaseConditions = currentConditions?.Base;
-
-    console.log(currentConditions, currentBaseConditions);
 
     // Get weather.gov forecast for temp/conditions since API doesn't provide current weather
     const forecasts = await getWeatherGovForecast(RESORTS.palisades.lat, RESORTS.palisades.lon);
