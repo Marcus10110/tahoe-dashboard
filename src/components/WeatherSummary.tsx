@@ -58,8 +58,8 @@ export default function WeatherSummary() {
     // Days until Friday (5 = Friday)
     let daysUntilFriday = (5 - currentDayOfWeek + 7) % 7
     if (currentDayOfWeek === 5) {
-      // It's Friday - check if we've passed Friday evening (6pm)
-      daysUntilFriday = now.getHours() >= 18 ? 7 : 0
+      // It's Friday - use this Friday (people want to see this weekend even Friday evening)
+      daysUntilFriday = 0
     }
 
     const thisFriday = new Date(nowDateOnly)
@@ -89,13 +89,18 @@ export default function WeatherSummary() {
 
       // This Weekend - Friday night through Sunday night
       // Weekend starts on Friday evening, so include periods from Friday onwards
-      if (periodDateOnly.getTime() >= thisFriday.getTime() &&
-          periodDateOnly.getTime() <= thisSunday.getTime()) {
+      const isInWeekendRange = periodDateOnly.getTime() >= thisFriday.getTime() &&
+          periodDateOnly.getTime() <= thisSunday.getTime()
+
+      if (isInWeekendRange) {
         // Also check if it's a Friday period that it's evening/night
         const periodName = period.name.toLowerCase()
-        if (periodDateOnly.getTime() === thisFriday.getTime()) {
+        const isFriday = periodDateOnly.getTime() === thisFriday.getTime()
+
+        if (isFriday) {
           // Only include if it's afternoon/evening/night on Friday
-          if (periodName.includes('night') || periodName.includes('evening') || periodName.includes('afternoon')) {
+          const isFridayEvening = periodName.includes('night') || periodName.includes('evening') || periodName.includes('afternoon')
+          if (isFridayEvening) {
             result.thisWeekend.push(period)
           }
         } else {
@@ -180,12 +185,16 @@ export default function WeatherSummary() {
               </div>
             )}
 
-            {forecast.thisWeekend.length > 0 && (
-              <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', opacity: 0.9 }}>This Weekend</h3>
+            <div style={{ marginBottom: '2rem' }}>
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', opacity: 0.9 }}>This Weekend</h3>
+              {forecast.thisWeekend.length > 0 ? (
                 <div className="forecast-grid">{renderPeriods(forecast.thisWeekend)}</div>
-              </div>
-            )}
+              ) : (
+                <div style={{ textAlign: 'center', opacity: 0.7, padding: '1rem' }}>
+                  Weekend forecast not yet available
+                </div>
+              )}
+            </div>
 
             {forecast.nextWeekend.length > 0 && (
               <div>
