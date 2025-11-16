@@ -11,24 +11,28 @@ const RESORTS = {
     configUrl: 'https://v4.mtnfeed.com/resorts/palisades-tahoe.json',
     lat: 39.1911,
     lon: -120.2359,
+    openingDate: '2025-11-26', // Wednesday, November 26, 2025
   },
   heavenly: {
     name: 'Heavenly',
     apiUrl: 'https://www.skiheavenly.com/api/PageApi/GetWeatherDataForHeader',
     lat: 38.9352,
     lon: -119.9392,
+    openingDate: '2025-11-21', // November 21, 2025
   },
   kirkwood: {
     name: 'Kirkwood',
     apiUrl: 'https://www.kirkwood.com/api/PageApi/GetWeatherDataForHeader',
     lat: 38.684,
     lon: -120.0664,
+    openingDate: '2025-12-05', // December 5, 2025
   },
   northstar: {
     name: 'Northstar',
     apiUrl: 'https://www.northstarcalifornia.com/api/PageApi/GetWeatherDataForHeader',
     lat: 39.2734,
     lon: -120.1218,
+    openingDate: '2025-11-21', // November 21, 2025
   },
 };
 
@@ -131,6 +135,7 @@ async function fetchPalisadesData(): Promise<ResortConditions> {
         thisWeekend: getWeekendForecasts(forecasts, false),
         nextWeekend: getWeekendForecasts(forecasts, true),
       },
+      openingDate: RESORTS.palisades.openingDate,
       lastUpdated: new Date().toISOString(),
     };
   } catch (error) {
@@ -205,6 +210,7 @@ async function fetchVailResortData(resortId: keyof typeof RESORTS): Promise<Reso
       thisWeekend: getWeekendForecasts(forecasts, false),
       nextWeekend: getWeekendForecasts(forecasts, true),
     },
+    openingDate: resort.openingDate,
     lastUpdated: new Date().toISOString(),
   };
 }

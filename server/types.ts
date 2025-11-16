@@ -50,6 +50,7 @@ export interface ResortConditions {
     thisWeekend: Forecast[];
     nextWeekend: Forecast[];
   };
+  openingDate: string;
   lastUpdated: string;
 }
 

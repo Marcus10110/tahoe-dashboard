@@ -37,6 +37,7 @@ interface ResortData {
     thisWeekend: any[];
     nextWeekend: any[];
   };
+  openingDate: string;
   lastUpdated: string;
 }
 

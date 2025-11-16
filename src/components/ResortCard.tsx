@@ -31,6 +31,7 @@ interface ResortCardProps {
       thisWeekend: any[];
       nextWeekend: any[];
     };
+    openingDate: string;
   };
 }
 
@@ -65,9 +66,69 @@ const RESORT_LINKS: Record<string, { main: string; weather: string; lifts: strin
 export default function ResortCard({ resort }: ResortCardProps) {
   const links = RESORT_LINKS[resort.id];
 
+  // Calculate opening day status
+  const getOpeningStatus = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    // Parse date as local timezone instead of UTC
+    const [year, month, day] = resort.openingDate.split('-').map(Number);
+    const openingDate = new Date(year, month - 1, day); // month is 0-indexed
+    openingDate.setHours(0, 0, 0, 0);
+
+    const daysUntilOpening = Math.ceil(
+      (openingDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    if (daysUntilOpening > 0) {
+      // Before opening day
+      const formattedDate = openingDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
+      return {
+        show: true,
+        message: `Opens ${formattedDate} • ${daysUntilOpening} ${daysUntilOpening === 1 ? 'day' : 'days'} away`,
+        isOpen: false,
+      };
+    } else if (daysUntilOpening === 0) {
+      // Opening day
+      return {
+        show: true,
+        message: '🎉 Now Open!',
+        isOpen: true,
+      };
+    } else {
+      // After opening day
+      return {
+        show: false,
+        message: '',
+        isOpen: true,
+      };
+    }
+  };
+
+  const openingStatus = getOpeningStatus();
+
   return (
     <div className="resort-card">
       <div className="resort-name">{resort.name}</div>
+      {openingStatus.show && (
+        <div
+          style={{
+            marginTop: '0.5rem',
+            marginBottom: '1rem',
+            padding: '0.5rem',
+            background: openingStatus.isOpen ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 152, 0, 0.2)',
+            borderRadius: '6px',
+            fontSize: '0.9rem',
+            fontWeight: 'bold',
+            textAlign: 'center',
+            border: openingStatus.isOpen ? '1px solid rgba(76, 175, 80, 0.4)' : '1px solid rgba(255, 152, 0, 0.4)',
+          }}
+        >
+          {openingStatus.message}
+        </div>
+      )}
       <div style={{ marginBottom: '1rem' }}>
         <a href={links.weather} target="_blank" rel="noopener noreferrer" className="resort-link">
           🌨️ Snow & Weather Report →
