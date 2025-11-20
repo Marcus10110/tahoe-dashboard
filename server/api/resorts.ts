@@ -153,6 +153,9 @@ async function fetchPalisadesData(): Promise<ResortConditions> {
   }
 }
 
+// Helper function to add delay
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 // Parse Vail Resorts data (Heavenly, Kirkwood, Northstar)
 async function fetchVailResortData(resortId: keyof typeof RESORTS): Promise<ResortConditions> {
   const resort = RESORTS[resortId];
@@ -162,91 +165,139 @@ async function fetchVailResortData(resortId: keyof typeof RESORTS): Promise<Reso
     throw new Error(`Resort ${resortId} does not have an apiUrl`);
   }
 
-  const timestamp = Date.now();
-  const response = await fetch(`${resort.apiUrl}?_=${timestamp}`, {
-    headers: {
-      'User-Agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      Accept: 'application/json, text/plain, */*',
-      'Accept-Language': 'en-US,en;q=0.9',
-      Referer: resort.apiUrl.split('/api/')[0],
-      Origin: resort.apiUrl.split('/api/')[0],
-    },
-  });
-
-  // Check if response is OK and is JSON
-  if (!response.ok) {
-    const text = await response.text();
-    console.error(`[${resortId}] API returned status ${response.status}`);
-    console.error(`[${resortId}] Response body (first 500 chars):`, text.substring(0, 500));
-    throw new Error(`Resort API returned status ${response.status} for ${resortId}`);
+  // Add staggered delay to avoid hitting rate limits when fetching multiple Vail resorts
+  const vailResorts = ['heavenly', 'kirkwood', 'northstar'];
+  const resortIndex = vailResorts.indexOf(resortId);
+  if (resortIndex > 0) {
+    await delay(resortIndex * 500); // 500ms delay between each Vail resort
   }
 
-  const contentType = response.headers.get('content-type');
-  if (!contentType || !contentType.includes('application/json')) {
-    const text = await response.text();
-    console.error(`[${resortId}] Expected JSON but got content-type: ${contentType}`);
-    console.error(`[${resortId}] Response body (first 500 chars):`, text.substring(0, 500));
-    throw new Error(`Resort API returned non-JSON response for ${resortId}`);
-  }
+  // Retry logic for intermittent 401 errors
+  let lastError: Error | null = null;
+  const maxRetries = 3;
 
-  const data = (await response.json()) as any;
-
-  if (process.env.NODE_ENV !== 'production') {
-    const path = `api_${resortId}.json`;
-    if (!fs.existsSync(path)) {
-      fs.writeFileSync(path, JSON.stringify(data, null, 2));
-      console.log(`[${resortId}] Created debug file: ${path}`);
-    }
-  }
-
-  const forecasts = await getWeatherGovForecast(resort.lat, resort.lon);
-
-  // Parse snow depth from SnowReportSections array
-  let baseDepth = 0;
-  let newSnow24h = 0;
-
-  if (data.SnowReportSections && Array.isArray(data.SnowReportSections)) {
-    for (const section of data.SnowReportSections) {
-      const description = section.Description?.toLowerCase() || '';
-      const inches = parseInt(section.Depth?.Inches || '0');
-
-      if (description.includes('base') && description.includes('depth')) {
-        baseDepth = inches;
-      } else if (description.includes('24 hour')) {
-        newSnow24h = inches;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      // Add random delay between retries to avoid rate limiting
+      if (attempt > 0) {
+        const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+        const jitter = Math.random() * 1000;
+        await delay(backoffMs + jitter);
+        console.log(`[${resortId}] Retry attempt ${attempt + 1}/${maxRetries}`);
       }
+
+      const timestamp = Date.now();
+      const response = await fetch(`${resort.apiUrl}?_=${timestamp}`, {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          Accept: 'application/json, text/plain, */*',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'same-origin',
+          Referer: resort.apiUrl.split('/api/')[0],
+          Origin: resort.apiUrl.split('/api/')[0],
+        },
+      });
+
+      // Check if response is OK and is JSON
+      if (!response.ok) {
+        const text = await response.text();
+        if (response.status === 401 && attempt < maxRetries - 1) {
+          // For 401 errors, retry
+          console.warn(
+            `[${resortId}] Got 401, will retry (attempt ${attempt + 1}/${maxRetries})`
+          );
+          lastError = new Error(`Resort API returned status ${response.status} for ${resortId}`);
+          continue;
+        }
+        console.error(`[${resortId}] API returned status ${response.status}`);
+        console.error(`[${resortId}] Response body (first 500 chars):`, text.substring(0, 500));
+        throw new Error(`Resort API returned status ${response.status} for ${resortId}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error(`[${resortId}] Expected JSON but got content-type: ${contentType}`);
+        console.error(`[${resortId}] Response body (first 500 chars):`, text.substring(0, 500));
+        throw new Error(`Resort API returned non-JSON response for ${resortId}`);
+      }
+
+      const data = (await response.json()) as any;
+
+      if (process.env.NODE_ENV !== 'production') {
+        const path = `api_${resortId}.json`;
+        if (!fs.existsSync(path)) {
+          fs.writeFileSync(path, JSON.stringify(data, null, 2));
+          console.log(`[${resortId}] Created debug file: ${path}`);
+        }
+      }
+
+      const forecasts = await getWeatherGovForecast(resort.lat, resort.lon);
+
+      // Parse snow depth from SnowReportSections array
+      let baseDepth = 0;
+      let newSnow24h = 0;
+
+      if (data.SnowReportSections && Array.isArray(data.SnowReportSections)) {
+        for (const section of data.SnowReportSections) {
+          const description = section.Description?.toLowerCase() || '';
+          const inches = parseInt(section.Depth?.Inches || '0');
+
+          if (description.includes('base') && description.includes('depth')) {
+            baseDepth = inches;
+          } else if (description.includes('24 hour')) {
+            newSnow24h = inches;
+          }
+        }
+      }
+
+      return {
+        name: resort.name,
+        id: resortId,
+        conditions: {
+          snowDepth: {
+            base: baseDepth,
+            summit: baseDepth, // Vail API doesn't differentiate
+            newSnow24h: newSnow24h,
+          },
+          weather: {
+            current: data.WeatherShortDescription || 'Unknown',
+            temp: data.CurrentTempStandard || 0,
+            high: data.HighTempStandard || 0,
+            low: data.LowTempStandard || 0,
+          },
+          lifts: {
+            open: data.OpenLifts || 0,
+            total: data.TotalLifts || 0,
+          },
+        },
+        forecasts: {
+          today: forecasts[0] || ({} as Forecast),
+          thisWeekend: getWeekendForecasts(forecasts, false),
+          nextWeekend: getWeekendForecasts(forecasts, true),
+        },
+        openingDate: resort.openingDate,
+        lastUpdated: new Date().toISOString(),
+      };
+    } catch (error) {
+      // Store error and continue to next retry
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt === maxRetries - 1) {
+        // Last attempt failed, throw the error
+        throw lastError;
+      }
+      // Continue to next retry
     }
   }
 
-  return {
-    name: resort.name,
-    id: resortId,
-    conditions: {
-      snowDepth: {
-        base: baseDepth,
-        summit: baseDepth, // Vail API doesn't differentiate
-        newSnow24h: newSnow24h,
-      },
-      weather: {
-        current: data.WeatherShortDescription || 'Unknown',
-        temp: data.CurrentTempStandard || 0,
-        high: data.HighTempStandard || 0,
-        low: data.LowTempStandard || 0,
-      },
-      lifts: {
-        open: data.OpenLifts || 0,
-        total: data.TotalLifts || 0,
-      },
-    },
-    forecasts: {
-      today: forecasts[0] || ({} as Forecast),
-      thisWeekend: getWeekendForecasts(forecasts, false),
-      nextWeekend: getWeekendForecasts(forecasts, true),
-    },
-    openingDate: resort.openingDate,
-    lastUpdated: new Date().toISOString(),
-  };
+  // This should never be reached due to the throw in the catch block
+  throw lastError || new Error(`Failed to fetch ${resortId} after ${maxRetries} attempts`);
 }
 
 // Helper to extract weekend forecasts
