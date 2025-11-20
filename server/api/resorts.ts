@@ -1,6 +1,7 @@
 import express from 'express';
 import NodeCache from 'node-cache';
 import type { ResortConditions, Forecast } from '../types.js';
+import fs from 'fs';
 
 const router = express.Router();
 const cache = new NodeCache({ stdTTL: 600 }); // 10 minute cache
@@ -91,6 +92,14 @@ async function fetchPalisadesData(): Promise<ResortConditions> {
       throw new Error(`Failed to fetch Palisades data`);
     }
     const data = (await response.json()) as any;
+
+    if (process.env.NODE_ENV !== 'production') {
+      const path = `api_palisades.json`;
+      if (!fs.existsSync(path)) {
+        fs.writeFileSync(path, JSON.stringify(data, null, 2));
+        console.log(`[palisades] Created debug file: ${path}`);
+      }
+    }
 
     // Extract resort data (should be first item in Resorts array)
     const resort = data.Resorts?.[0];
@@ -183,16 +192,41 @@ async function fetchVailResortData(resortId: keyof typeof RESORTS): Promise<Reso
 
   const data = (await response.json()) as any;
 
+  if (process.env.NODE_ENV !== 'production') {
+    const path = `api_${resortId}.json`;
+    if (!fs.existsSync(path)) {
+      fs.writeFileSync(path, JSON.stringify(data, null, 2));
+      console.log(`[${resortId}] Created debug file: ${path}`);
+    }
+  }
+
   const forecasts = await getWeatherGovForecast(resort.lat, resort.lon);
+
+  // Parse snow depth from SnowReportSections array
+  let baseDepth = 0;
+  let newSnow24h = 0;
+
+  if (data.SnowReportSections && Array.isArray(data.SnowReportSections)) {
+    for (const section of data.SnowReportSections) {
+      const description = section.Description?.toLowerCase() || '';
+      const inches = parseInt(section.Depth?.Inches || '0');
+
+      if (description.includes('base') && description.includes('depth')) {
+        baseDepth = inches;
+      } else if (description.includes('24 hour')) {
+        newSnow24h = inches;
+      }
+    }
+  }
 
   return {
     name: resort.name,
     id: resortId,
     conditions: {
       snowDepth: {
-        base: data.BaseDepthStandard || 0,
-        summit: data.BaseDepthStandard || 0, // Vail API doesn't differentiate
-        newSnow24h: data.TwentyFourHourSnowfallStandard || 0,
+        base: baseDepth,
+        summit: baseDepth, // Vail API doesn't differentiate
+        newSnow24h: newSnow24h,
       },
       weather: {
         current: data.WeatherShortDescription || 'Unknown',
